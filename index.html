@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tu-Jardin-Magico</title>
+<style>
+body {
+    margin: 0;
+    height: 200vh;
+    background-image: url('assets/tulipan.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: top center;
+    font-family: sans-serif;
+    overflow-y: scroll;
+    position: relative;
+}
+
+/* Título PNG */
+#titulo-texto {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    max-width: 400px;
+    z-index: 5;
+}
+
+/* Hadita */
+#hadita {
+    position: absolute;
+    width: 50px;
+    transition: all 0.8s ease-in-out;
+    z-index: 10;
+}
+
+/* Girasoles */
+.flor {
+    position: absolute;
+    width: 120px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+.flor:hover {
+    transform: scale(1.1);
+}
+
+/* Polvillo mágico */
+.polvillo-hada {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,200,1) 0%, rgba(255,200,0,0.7) 40%, rgba(255,255,255,0) 80%);
+    box-shadow: 0 0 8px rgba(255,255,150,0.8), 0 0 15px rgba(255,220,120,0.6);
+    pointer-events: none;
+    animation: desaparecer 1s forwards;
+}
+@keyframes desaparecer {
+    to {
+        transform: translateY(-20px) scale(0.3);
+        opacity: 0;
+    }
+}
+
+/* Overlay sombreado */
+#overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 8;
+}
+
+/* Cartita y ramo en el centro */
+#cartita, #ramo {
+    position: fixed;
+    display: none;
+    z-index: 9;
+    transition: transform 0.6s ease;
+    max-width: 80%;
+}
+#cartita {
+    width: 220px;
+}
+#ramo {
+    width: 220px;
+}
+
+/* Animación abrir carta */
+@keyframes abrirCarta {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+.abierta {
+    animation: abrirCarta 0.6s ease forwards;
+}
+
+/* Mensajes sobre cartita y ramo */
+#mensaje-cartita, #mensaje-ramo {
+    position: fixed;
+    display: none;
+    color: white;
+    font-size: 16px;
+    font-family: "Amarillo", cursive;
+    font-style: italic;
+    text-align: left;
+    z-index: 11;
+    width: 85%;
+    max-width: 280px;
+    line-height: 1.3em;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+/* 📱 Ajustes móviles */
+@media (max-width: 768px) {
+    #hadita {
+        width: 40px;
+    }
+    .flor {
+        width: 100px;
+    }
+    #cartita, #ramo {
+        width: 180px;
+    }
+    #mensaje-cartita, #mensaje-ramo {
+        font-size: 14px;
+        width: 80%;
+    }
+    #titulo-texto {
+        width: 80%;
+        max-width: 300px;
+    }
+}
+</style>
+</head>
+<body>
+
+<img id="titulo-texto" src="assets/titulo.png" alt="Bienvenida a Tu Jardín Mágico">
+<img id="hadita" src="assets/hadita.png" alt="Hadita">
+
+<div id="overlay"></div>
+
+<img id="cartita" src="assets/cartita_cerrada.png" alt="Cartita">
+<img id="ramo" src="assets/ramo.png" alt="Ramo">
+
+<!-- Mensajes -->
+<div id="mensaje-cartita"></div>
+<div id="mensaje-ramo"></div>
+
+<img id="girasol5" class="flor" src="assets/girasol.png" alt="Girasol">
+
+<script>
+const titulo = document.getElementById('titulo-texto');
+const hadita = document.getElementById('hadita');
+const cartita = document.getElementById('cartita');
+const ramo = document.getElementById('ramo');
+const overlay = document.getElementById('overlay');
+const mensajeCartitaEl = document.getElementById('mensaje-cartita');
+const mensajeRamoEl = document.getElementById('mensaje-ramo');
+
+ramo.style.display = 'none';
+
+// Posiciones girasoles
+const posiciones = [
+    {top: 250, left: 20},
+    {top: 900, left: 20},
+    {top: 1200, left: 10},
+    {top: 600, left: 50},
+    {top: 1500, left: window.innerWidth/2 - 60}
+];
+
+const girasoles = [];
+for(let i=0;i<4;i++){
+    const flor = document.createElement('img');
+    flor.src = 'assets/girasol.png';
+    flor.className = 'flor';
+    flor.style.top = posiciones[i].top + 'px';
+    flor.style.left = posiciones[i].left + 'px';
+    document.body.appendChild(flor);
+    girasoles.push(flor);
+}
+
+const girasol5 = document.getElementById('girasol5');
+girasol5.style.top = posiciones[4].top + 'px';
+girasol5.style.left = posiciones[4].left + 'px';
+girasoles.push(girasol5);
+
+// Polvillo mágico
+function crearPolvillo(x,y){
+    const polvo = document.createElement('div');
+    polvo.className='polvillo-hada';
+    polvo.style.top = y + 'px';
+    polvo.style.left = x + 'px';
+    document.body.appendChild(polvo);
+    setTimeout(()=>polvo.remove(),1000);
+}
+
+setInterval(()=> {
+    const rect = hadita.getBoundingClientRect();
+    crearPolvillo(rect.left + rect.width/2, rect.top + rect.height/2);
+}, 120);
+
+document.addEventListener('mousemove', e=> crearPolvillo(e.pageX, e.pageY));
+document.addEventListener('touchmove', e=>{
+    let t = e.touches[0];
+    crearPolvillo(t.pageX, t.pageY);
+});
+
+let vuelo = true;
+setInterval(()=>{
+    hadita.src = vuelo ? 'assets/hadita2.png' : 'assets/hadita.png';
+    vuelo = !vuelo;
+}, 200);
+
+hadita.style.top = (titulo.offsetTop + 10) + "px";
+hadita.style.left = (titulo.offsetLeft + 10) + "px";
+
+function centrarElemento(el) {
+    el.style.top = (window.innerHeight/2 - el.offsetHeight/2) + 'px';
+    el.style.left = (window.innerWidth/2 - el.offsetWidth/2) + 'px';
+}
+
+const mensajesCartita = [
+  "Tu mi pequeña hada por supuesto que no puedes pasar desapercibida en esta primavera, no mereces solo un ramo, mereces todo un jardín de tulipanes.",
+  "Estoy más que seguro de que en el fondo de mi corazón soy malo... pero por ti y solo por ti, demostraré mi amor.",
+  "Quiero que la vida te llene de bendiciones y felicidad en cada decisión que tomes aun que yo no esté ahí.",
+  "Hay mil y un cosas que quisiera decirte, pero no me desespero. tenemos una vida entera para demostrarnos amor."
+];
+const mensajeRamo = "Claro que también tendrás tu ramo de flores amarillas. mi niña preciosa. Te amo.";
+
+function mostrarMensajeSobre(el, mensaje, tipo){
+    const rect = el.getBoundingClientRect();
+    // Ajuste hacia la izquierda
+    const left = Math.max(10, rect.left - 60);
+    const top = rect.top - 180;
+    if(tipo==="cartita"){
+        mensajeCartitaEl.style.left = left + 'px';
+        mensajeCartitaEl.style.top = top + 'px';
+        mensajeCartitaEl.textContent = mensaje;
+        mensajeCartitaEl.style.display = 'block';
+        mensajeCartitaEl.style.opacity = 0;
+        setTimeout(()=>{ mensajeCartitaEl.style.opacity = 1; }, 50);
+    } else {
+        mensajeRamoEl.style.left = left + 'px';
+        mensajeRamoEl.style.top = top + 'px';
+        mensajeRamoEl.textContent = mensaje;
+        mensajeRamoEl.style.display = 'block';
+        mensajeRamoEl.style.opacity = 0;
+        setTimeout(()=>{ mensajeRamoEl.style.opacity = 1; }, 50);
+    }
+}
+
+function ocultarMensajes(){
+    mensajeCartitaEl.style.display = 'none';
+    mensajeCartitaEl.style.opacity = 0;
+    mensajeRamoEl.style.display = 'none';
+    mensajeRamoEl.style.opacity = 0;
+}
+
+// Click en girasol
+girasoles.forEach((flor,index)=>{
+    flor.addEventListener('click', e=>{
+        e.stopPropagation();
+        overlay.style.display = 'block';
+        ocultarMensajes();
+        if(index === 4){ // ramo
+            centrarElemento(ramo);
+            ramo.style.display = 'block';
+            cartita.style.display='none';
+            mostrarMensajeSobre(ramo, mensajeRamo, "ramo");
+        } else { // carta
+            centrarElemento(cartita);
+            cartita.src = 'assets/cartita_cerrada.png';
+            cartita.style.display='block';
+            ramo.style.display='none';
+            cartita.classList.remove('abierta');
+            setTimeout(()=>{
+                cartita.src = 'assets/cartita_abierta.png';
+                cartita.classList.add('abierta');
+                mostrarMensajeSobre(cartita, mensajesCartita[index], "cartita");
+            }, 700);
+        }
+    });
+});
+
+function moverHaditaTitulo(){
+    const maxX = titulo.offsetWidth - hadita.offsetWidth;
+    const maxY = titulo.offsetHeight - hadita.offsetHeight;
+    const newX = Math.random() * maxX;
+    const newY = Math.random() * maxY;
+    hadita.style.left = (titulo.offsetLeft + newX) + "px";
+    hadita.style.top = (titulo.offsetTop + newY) + "px";
+}
+hadita.addEventListener('mouseenter', moverHaditaTitulo);
+
+overlay.addEventListener('click', ()=>{
+    overlay.style.display = 'none';
+    cartita.style.display='none';
+    ramo.style.display='none';
+    cartita.classList.remove('abierta');
+    ocultarMensajes();
+});
+</script>
+</body>
+</html>
